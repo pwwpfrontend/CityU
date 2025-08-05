@@ -3,11 +3,11 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
 import { CalendarIcon } from '@heroicons/react/24/outline';
-import { format, parse } from 'date-fns';
+// Using native JavaScript Date methods instead of date-fns
 
 const ReportsSection = () => {
-  const [startDate, setStartDate] = useState(new Date('2025-07-01'));
-  const [endDate, setEndDate] = useState(new Date('2025-07-31'));
+  const [startDate, setStartDate] = useState(new Date('2025-08-01'));
+  const [endDate, setEndDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
   const [isSelectingStart, setIsSelectingStart] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,33 +17,41 @@ const ReportsSection = () => {
   const handleGenerateReport = async () => {
     try {
       setIsLoading(true);
-      const startStr = format(startDate, 'yyyy-MM-dd');
-      const endStr = format(endDate, 'yyyy-MM-dd');
+      const startStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const endStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD format
 
       // Fetch device information for area mapping
-      const deviceResponse = await fetch('https://api.powerworkplace.com/api:IbIdPxaw/device_mangement_get_status?customer_id=CityU');
+      const deviceResponse = await fetch('http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/device_management');
       if (!deviceResponse.ok) throw new Error('Failed to fetch device data');
       const deviceData = await deviceResponse.json();
 
-      // Create device mapping for Area_Name lookup
+      // Create device mapping for Area_Name lookup with custom display names
       const deviceMap = {};
+      const areaDisplayMapping = {
+        'Main Entrance': '6/F Lobby',
+        '2nd Entrance': '6/F Activity Rooms', 
+        'Corridor': '7/F Activity Rooms'
+      };
+      
       deviceData.forEach(device => {
-        deviceMap[device.Device_id] = {
-          area: `${device.Floor} ${device.Area}`,
-          location: device.Location,
-          floor: device.Floor,
-          building: device.Building
+        deviceMap[device.Device_ID] = {
+          area: areaDisplayMapping[device.area] || `${device.floor} ${device.area}`,
+          location: device.location,
+          floor: device.floor,
+          building: device.building
         };
       });
 
       // Fetch visit data using the correct endpoint
-      const visitResponse = await fetch(`https://api.powerworkplace.com/api:JhyDriv1/city_sds_history_record_daily?start_time=${startStr}&end_time=${endStr}`);
+      const visitResponse = await fetch(`http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/visits?start_time=${startStr}&end_time=${endStr}`);
       if (!visitResponse.ok) throw new Error('Failed to fetch visit data');
       const visitData = await visitResponse.json();
 
       // Filter records that fall exactly within start and end date (INCLUSIVE of end date)
       const filteredData = visitData.filter((record) => {
-        const recordDate = parse(record.date, 'd MMMM yyyy,EEE', new Date());
+        // Parse date string "01 August 2025, Fri" to Date object
+        const dateStr = record.date.replace(/,.*$/, ''); // Remove day part: "01 August 2025"
+        const recordDate = new Date(dateStr);
         const sDate = new Date(startDate);
         sDate.setHours(0, 0, 0, 0);
         const eDate = new Date(endDate);
@@ -55,7 +63,7 @@ const ReportsSection = () => {
       const finalData = filteredData.map((entry) => ({
         Device_ID: entry.Device_ID,
         Area_Name: deviceMap[entry.Device_ID]?.area || 'Unknown Area',
-        Date: entry.date, // Keep original formatted string like "23 July 2025,Wed"
+        Date: entry.date, // Keep original formatted string like "01 August 2025, Fri"
         Visit: entry.Total_visit
       }));
 

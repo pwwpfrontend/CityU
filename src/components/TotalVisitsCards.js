@@ -18,7 +18,7 @@ const TotalVisitsCards = () => {
   const fetchLiveVisits = async () => {
     try {
       const res = await fetch(
-        'https://api.powerworkplace.com/api:JhyDriv1/city_sds_live_test'
+        'http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/live'
       );
 
       if (!res.ok) throw new Error('Failed to fetch live visit data');
@@ -28,7 +28,7 @@ const TotalVisitsCards = () => {
 
       const processedData = displayAreas.map((area) => {
         const deviceId = areaToDeviceMapping[area];
-        const deviceData = liveData.find((d) => d.Device_Name === deviceId);
+        const deviceData = liveData.find((d) => d.deviceName === deviceId);
 
         return {
           area,

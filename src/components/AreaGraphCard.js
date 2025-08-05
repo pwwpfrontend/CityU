@@ -10,28 +10,29 @@ const AreaGraphCard = ({ selectedArea }) => {
   useEffect(() => {
     const fetchDeviceMapping = async () => {
       try {
-        const response = await fetch('https://api.powerworkplace.com/api:IbIdPxaw/device_mangement_get_status?customer_id=CityU');
+        const response = await fetch('http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/device_management');
         const devices = await response.json();
         
         // Store all devices for floor-level aggregation
         setAllDevices(devices);
         
-        // Create exact mapping based on the device data structure
+        // Create mapping: selectedArea -> Device_ID
         const mapping = {};
+        
         devices.forEach(device => {
-          // Map exact area names as they appear in the API
-          // From API: "6/F" + "Lobby" = "6/F Lobby"
-          // From API: "6/F" + "Activity Rooms" = "6/F Activity Rooms" 
-          // From API: "7/F" + "Activity Rooms" = "7/F Activity Rooms"
+          // Direct mapping from device data
+          // CITYU-SDS-FF-01 (Main Entrance) -> 6/F Lobby
+          // CITYU-SDS-FF-02 (2nd Entrance) -> 6/F Activity Rooms
+          // CITYU-SDS-FF-03 (Corridor) -> 7/F Activity Rooms
           
-          const exactKey = `${device.Floor} ${device.Area}`;
-          mapping[exactKey] = device.Device_id;
-          
-          // Also handle the singular form that might come from dropdown
-          // "Activity Rooms" -> "Activity Room"
-          if (device.Area === "Activity Rooms") {
-            const singularKey = `${device.Floor} Activity Room`;
-            mapping[singularKey] = device.Device_id;
+          if (device.Device_ID === 'CITYU-SDS-FF-01') {
+            mapping['6/F Lobby'] = device.Device_ID;
+          } else if (device.Device_ID === 'CITYU-SDS-FF-02') {
+            mapping['6/F Activity Rooms'] = device.Device_ID;
+            mapping['6/F Activity Room'] = device.Device_ID; // Handle singular form
+          } else if (device.Device_ID === 'CITYU-SDS-FF-03') {
+            mapping['7/F Activity Rooms'] = device.Device_ID;
+            mapping['7/F Activity Room'] = device.Device_ID; // Handle singular form
           }
         });
         
@@ -52,8 +53,19 @@ const AreaGraphCard = ({ selectedArea }) => {
     }
     
     // Check if it's a floor-level selection (e.g., "6/F", "7/F")
-    const floorDevices = allDevices.filter(device => device.Floor === selectedArea);
-    return floorDevices.map(device => device.Device_id);
+    if (selectedArea === '6/F') {
+      // Return both 6/F devices
+      return allDevices
+        .filter(device => device.floor === '6/F')
+        .map(device => device.Device_ID);
+    } else if (selectedArea === '7/F') {
+      // Return 7/F device
+      return allDevices
+        .filter(device => device.floor === '7/F')
+        .map(device => device.Device_ID);
+    }
+    
+    return [];
   };
 
   // Fetch visit data when selectedArea or deviceMapping changes
@@ -89,7 +101,7 @@ const AreaGraphCard = ({ selectedArea }) => {
         const endDate = endOfWeek.toISOString().split('T')[0];
         
         const response = await fetch(
-          `https://api.powerworkplace.com/api:JhyDriv1/city_sds_history_record_daily?start_time=${startDate}&end_time=${endDate}`
+          `http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/visits?start_time=${startDate}&end_time=${endDate}`
         );
         const visitData = await response.json();
         
@@ -104,7 +116,7 @@ const AreaGraphCard = ({ selectedArea }) => {
           const date = new Date(startOfWeek);
           date.setDate(startOfWeek.getDate() + i);
           
-          // Format date to match API format exactly: "DD Month YYYY,DayName"
+          // Format date to match API format exactly: "DD Month YYYY, DayName"
           const day = date.getDate().toString().padStart(2, '0');
           const month = date.toLocaleDateString('en-US', { month: 'long' });
           const year = date.getFullYear();
@@ -113,7 +125,7 @@ const AreaGraphCard = ({ selectedArea }) => {
           const dayAbbreviations = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           const dayName = dayAbbreviations[date.getDay()];
           
-          const formattedDate = `${day} ${month} ${year},${dayName}`;
+          const formattedDate = `${day} ${month} ${year}, ${dayName}`;
           
           // Aggregate visits for all relevant devices on this date
           let totalVisits = 0;
