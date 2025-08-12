@@ -42,8 +42,9 @@ const ReportsSection = () => {
         };
       });
 
-      // Fetch visit data using the correct endpoint
-      const visitResponse = await fetch(`http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/visits?start_time=${startStr}&end_time=${endStr}`);
+      // Fetch visit data using the correct endpoint with current date as end_time
+      const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+      const visitResponse = await fetch(`http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/visits?start_time=2025-08-01&end_time=${currentDate}`);
       if (!visitResponse.ok) throw new Error('Failed to fetch visit data');
       const visitData = await visitResponse.json();
 
@@ -59,12 +60,12 @@ const ReportsSection = () => {
         return recordDate >= sDate && recordDate <= eDate;
       });
 
-      // Map the data according to the required format
+      // Map the data according to the required format - corrected field name
       const finalData = filteredData.map((entry) => ({
         Device_ID: entry.Device_ID,
         Area_Name: deviceMap[entry.Device_ID]?.area || 'Unknown Area',
         Date: entry.date, // Keep original formatted string like "01 August 2025, Fri"
-        Visit: entry.Total_visit
+        Visit: entry.Total_visits // Corrected field name from Total_visit to Total_visits
       }));
 
       // Generate Excel file

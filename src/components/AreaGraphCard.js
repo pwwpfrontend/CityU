@@ -19,20 +19,22 @@ const AreaGraphCard = ({ selectedArea }) => {
         // Create mapping: selectedArea -> Device_ID
         const mapping = {};
         
+        // Create area display mapping (same as in ReportsSection)
+        const areaDisplayMapping = {
+          'Main Entrance': '6/F Lobby',
+          '2nd Entrance': '6/F Activity Rooms', 
+          'Corridor': '7/F Activity Rooms'
+        };
+        
         devices.forEach(device => {
-          // Direct mapping from device data
-          // CITYU-SDS-FF-01 (Main Entrance) -> 6/F Lobby
-          // CITYU-SDS-FF-02 (2nd Entrance) -> 6/F Activity Rooms
-          // CITYU-SDS-FF-03 (Corridor) -> 7/F Activity Rooms
+          // Map based on the area display mapping
+          const displayArea = areaDisplayMapping[device.area] || `${device.floor} ${device.area}`;
+          mapping[displayArea] = device.Device_ID;
           
-          if (device.Device_ID === 'CITYU-SDS-FF-01') {
-            mapping['6/F Lobby'] = device.Device_ID;
-          } else if (device.Device_ID === 'CITYU-SDS-FF-02') {
-            mapping['6/F Activity Rooms'] = device.Device_ID;
-            mapping['6/F Activity Room'] = device.Device_ID; // Handle singular form
-          } else if (device.Device_ID === 'CITYU-SDS-FF-03') {
-            mapping['7/F Activity Rooms'] = device.Device_ID;
-            mapping['7/F Activity Room'] = device.Device_ID; // Handle singular form
+          // Also handle singular forms
+          if (displayArea.endsWith('Rooms')) {
+            const singularForm = displayArea.replace('Rooms', 'Room');
+            mapping[singularForm] = device.Device_ID;
           }
         });
         
@@ -137,7 +139,8 @@ const AreaGraphCard = ({ selectedArea }) => {
                 item.Device_ID === deviceId && item.date === formattedDate
               );
               if (dayData) {
-                totalVisits += dayData.Total_visit;
+                // Corrected field name from Total_visit to Total_visits
+                totalVisits += dayData.Total_visits;
               }
             });
           }
