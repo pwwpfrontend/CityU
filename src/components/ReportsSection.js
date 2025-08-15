@@ -21,7 +21,7 @@ const ReportsSection = () => {
       const endStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD format
 
       // Fetch device information for area mapping
-      const deviceResponse = await fetch('http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/device_management');
+      const deviceResponse = await fetch('https://njs-01.optimuslab.space/city_u/optimus/device_management');
       if (!deviceResponse.ok) throw new Error('Failed to fetch device data');
       const deviceData = await deviceResponse.json();
 
@@ -44,7 +44,7 @@ const ReportsSection = () => {
 
       // Fetch visit data using the correct endpoint with current date as end_time
       const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-      const visitResponse = await fetch(`http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/visits?start_time=2025-08-01&end_time=${currentDate}`);
+      const visitResponse = await fetch(`https://njs-01.optimuslab.space/city_u/optimus/visits?start_time=2025-08-01&end_time=${currentDate}`);
       if (!visitResponse.ok) throw new Error('Failed to fetch visit data');
       const visitData = await visitResponse.json();
 

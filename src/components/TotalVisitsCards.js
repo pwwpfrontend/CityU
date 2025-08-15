@@ -18,7 +18,7 @@ const TotalVisitsCards = () => {
   const fetchLiveVisits = async () => {
     try {
       const res = await fetch(
-        'http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/live'
+        'https://njs-01.optimuslab.space/city_u/optimus/live'
       );
 
       if (!res.ok) throw new Error('Failed to fetch live visit data');

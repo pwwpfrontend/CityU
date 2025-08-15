@@ -10,7 +10,7 @@ const AreaGraphCard = ({ selectedArea }) => {
   useEffect(() => {
     const fetchDeviceMapping = async () => {
       try {
-        const response = await fetch('http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/device_management');
+        const response = await fetch('https://njs-01.optimuslab.space/city_u/optimus/device_management');
         const devices = await response.json();
         
         // Store all devices for floor-level aggregation
@@ -103,7 +103,7 @@ const AreaGraphCard = ({ selectedArea }) => {
         const endDate = endOfWeek.toISOString().split('T')[0];
         
         const response = await fetch(
-          `http://optimus-india-njs-01.netbird.cloud:3004/city_u/optimus/visits?start_time=${startDate}&end_time=${endDate}`
+          `https://njs-01.optimuslab.space/city_u/optimus/visits?start_time=${startDate}&end_time=${endDate}`
         );
         const visitData = await response.json();
         
